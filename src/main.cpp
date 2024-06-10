@@ -12,18 +12,36 @@
  any redistribution
 *********************************************************************/
 
+#include <fmt/core.h>
+#include <fmt/ranges.h>
+
 #include <Arduino.h>
 #include <Adafruit_TinyUSB.h> // for Serial
 #include "bluefruit.h"
-// #include <bluemicro_nrf52.h>
+
+#include <bluemicro_nrf52.h>
 #include <bluemicro_hid.h>
+
 
 #define ENCODER_S1_PIN P1_06
 #define ENCODER_S2_PIN P1_04
 #include "qdec.h"
 
+
 const int ROTARY_PIN_A = P1_06; // the first pin connected to the rotary encoder
 const int ROTARY_PIN_B = P1_04; // the second pin connected to the rotary encoder
+
+trigger_keys_t activeKeys;
+trigger_keycodes_t activeKeycodes;
+
+const byte rows[]{P0_17, P0_20, P0_22, P0_24}; // Contains the GPIO Numbers
+const byte columns[]{P0_08, P0_10, P0_09};     // Contains the GPIO Numbers
+
+const uint16_t matrixsize = (sizeof(rows) / sizeof(byte)) * (sizeof(columns) / sizeof(byte));
+// const uint16_t  keymapsize = (sizeof(keymap) / sizeof(uint16_t));
+
+#define sleep(r, c) sleep_C2R(r, c)
+#define scanMatrix(a, b, c) scanMatrix_C2R(a, b, c)
 
 // Create an instance of the QDecoder class, using the pins define'd above
 ::SimpleHacks::QDecoder qdec(ROTARY_PIN_A, ROTARY_PIN_B, false);
@@ -64,12 +82,23 @@ void setup()
 
   attachInterrupt(digitalPinToInterrupt(ROTARY_PIN_A), IsrForQDEC, CHANGE);
   attachInterrupt(digitalPinToInterrupt(ROTARY_PIN_B), IsrForQDEC, CHANGE);
+
+  activeKeys.reserve(10);
+  activeKeycodes.reserve(10);
 }
 
 int lastLoopDisplayedRotaryCount = 0;
 
 void loop()
 {
+  static trigger_keys_t lastAactiveKeys;
+  activeKeys = scanMatrix(activeKeys, rows, columns);
+  if (activeKeys != lastAactiveKeys)
+  {
+    fmt::print("activeKeys: {}\n", activeKeys);
+    lastAactiveKeys = activeKeys;
+  }
+
   int newValue = rotaryCount;
   if (newValue != lastLoopDisplayedRotaryCount)
   {
