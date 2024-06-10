@@ -14,40 +14,67 @@
 
 #include <Arduino.h>
 #include <Adafruit_TinyUSB.h> // for Serial
-#include "RotaryEncoder.h"
 
-#define PIN_A P1_06
-#define PIN_B P1_04
+#define ENCODER_S1_PIN P1_06
+#define ENCODER_S2_PIN P1_04
+#include "qdec.h"
 
-// SwRotaryEncoder swEncoder;
-// void encoder_callback(int step);
+const int ROTARY_PIN_A = P1_06; // the first pin connected to the rotary encoder
+const int ROTARY_PIN_B = P1_04; // the second pin connected to the rotary encoder
 
-SwRotaryEncoder swEncoder;
+// Create an instance of the QDecoder class, using the pins define'd above
+::SimpleHacks::QDecoder qdec(ROTARY_PIN_A, ROTARY_PIN_B, false);
+
+// Stores a relative value based on the clockwise / counterclockwise events
+int rotaryCount = 0;
 
 void setup()
 {
+  delay(2000);
+
   Serial.begin(115200);
-  while ( !Serial ) delay(10);   // for nrf52840 with native usb
+  while (!Serial)
+  {
+    delay(20);
+  } // wait for serial port to connect... needed for boards with native USB serial support
+  Serial.print("Beginning QDecoder Sketch ");
+  Serial.println(__FILE__); // becomes the sketch's filename during compilation
 
-  Serial.println("Bluefruit52 SW Rotary Encoder Polling Example");
-  Serial.println("---------------------------------------------\n");
+  // initialize the rotary encoder
+  qdec.begin();
 
-  // Initialize Encoder
-  swEncoder.begin(PIN_A, PIN_B);
+  // for (int pin = 0; pin < 26; pin++)
+  // {
+  //   pinMode(pin, INPUT_PULLUP);
+  // }
 }
 
 void loop()
 {
-  int value = swEncoder.read();
+  // poll the state of the quadrature encoder,
+  // and storing the result (which is an event, if one occurred this time)
+  ::SimpleHacks::QDECODER_EVENT event = qdec.update();
 
-  if (value)
+  // increment for clockwise, decrement for counter-clockwise
+  if (event & ::SimpleHacks::QDECODER_EVENT_CW)
   {
-    if ( value > 0 )
-    {
-      Serial.println("Right");
-    }else
-    {
-      Serial.println("Left");
-    }
+    rotaryCount = rotaryCount + 1;
+    Serial.print("change: ");
+    Serial.println(rotaryCount);
   }
-}
+  else if (event & ::SimpleHacks::QDECODER_EVENT_CCW)
+  {
+    rotaryCount = rotaryCount - 1;
+    Serial.print("change: ");
+    Serial.println(rotaryCount);
+  }
+
+  // for (int pin = 0; pin < 26; pin++)
+  // {
+  //   Serial.print(digitalRead(pin));
+  //   Serial.print(" ");
+  // }
+  // Serial.println();
+  // delay(100);
+
+} // end of void loop()
