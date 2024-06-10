@@ -120,3 +120,7 @@ https://docs.platformio.org/en/stable/scripting/examples/override_package_files.
 https://community.platformio.org/t/custom-nrf52832-board-pinout/24491/8
 https://github.com/platformio/builder-framework-arduino-nrf5/pull/12
 yep that fixed it
+
+# encoder
+(the nRF peripheral thingy sucks)
+https://github.com/SimpleHacks/QDEC
