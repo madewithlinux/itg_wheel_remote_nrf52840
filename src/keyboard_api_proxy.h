@@ -14,6 +14,7 @@ public:
     void release(keycode_t keycode);
     void tap(keycode_t keycode);
     void processDirtyKeys();
+    void clear();
 
     // uint32_t tap_code_delay = 1;
 

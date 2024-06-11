@@ -54,6 +54,10 @@ void KeyboardApiProxy::tap(keycode_t keycode)
 
 void KeyboardApiProxy::processDirtyKeys()
 {
+    if (held_keycodes.empty())
+    {
+        bluemicro_hid.keyboardRelease();
+    }
     while (!bluemicro_hid.isKeyboardQueueEmpty())
     {
         bluemicro_hid.processQueues(CONNECTION_MODE_AUTO);
@@ -107,6 +111,26 @@ void KeyboardApiProxy::processDirtyKeys()
     {
         bluemicro_hid.processQueues(CONNECTION_MODE_AUTO);
     }
+    dirty_press.clear();
+    dirty_release.clear();
+}
+
+void KeyboardApiProxy::clear()
+{
+    // make sure not to drop keys
+    processDirtyKeys();
+    // if (
+    //     !held_keycodes.empty() ||
+    //     !dirty_press.empty() ||
+    //     !dirty_release.empty())
+    // {
+    //     bluemicro_hid.keyboardRelease();
+    //     while (!bluemicro_hid.isKeyboardQueueEmpty())
+    //     {
+    //         bluemicro_hid.processQueues(CONNECTION_MODE_AUTO);
+    //     }
+    // }
+    held_keycodes.clear();
     dirty_press.clear();
     dirty_release.clear();
 }

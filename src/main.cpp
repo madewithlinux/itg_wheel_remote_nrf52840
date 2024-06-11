@@ -22,6 +22,7 @@
 #include <bluemicro_nrf52.h>
 #include <bluemicro_hid.h>
 #include "keyboard_api_proxy.h"
+#include "keymap_layers.h"
 
 #define ENCODER_S1_PIN P1_06
 #define ENCODER_S2_PIN P1_04
@@ -99,26 +100,30 @@ void loop()
   }
 
   int newValue = rotaryCount;
+  int delta = newValue - lastLoopDisplayedRotaryCount;
   if (newValue != lastLoopDisplayedRotaryCount)
   {
-    // Also get the difference since the last loop() execution
-    int difference = newValue - lastLoopDisplayedRotaryCount;
+    // Also get the delta since the last loop() execution
 
     // act on the change: e.g., modify PWM to be faster/slower, etc.
     lastLoopDisplayedRotaryCount = newValue;
     Serial.print("Change: ");
     Serial.print(newValue);
     Serial.print(" (");
-    Serial.print(difference);
+    Serial.print(delta);
     Serial.println(")");
 
     uint8_t keycode[6] = {0};
-    keycode[0] = (difference > 0) ? HID_KEY_ARROW_RIGHT : HID_KEY_ARROW_LEFT;
-    for (int i = 0; i < abs(difference); i++)
+    keycode[0] = (delta > 0) ? HID_KEY_ARROW_RIGHT : HID_KEY_ARROW_LEFT;
+    for (int i = 0; i < abs(delta); i++)
     {
       keyboard_api.tap(keycode[0]);
     }
   }
+
+  // TODO: read player switch
+  // TODO: read center button
+  process_triggered_keys(activeKeys, false, delta);
 
   keyboard_api.processDirtyKeys();
 }
