@@ -21,12 +21,11 @@
 
 #include <bluemicro_nrf52.h>
 #include <bluemicro_hid.h>
-
+#include "keyboard_api_proxy.h"
 
 #define ENCODER_S1_PIN P1_06
 #define ENCODER_S2_PIN P1_04
 #include "qdec.h"
-
 
 const int ROTARY_PIN_A = P1_06; // the first pin connected to the rotary encoder
 const int ROTARY_PIN_B = P1_04; // the second pin connected to the rotary encoder
@@ -65,7 +64,7 @@ void IsrForQDEC(void)
 
 void setup()
 {
-  bluemicro_hid.begin();
+  keyboard_api.begin();
 
   // delay(2000);
 
@@ -117,10 +116,9 @@ void loop()
     keycode[0] = (difference > 0) ? HID_KEY_ARROW_RIGHT : HID_KEY_ARROW_LEFT;
     for (int i = 0; i < abs(difference); i++)
     {
-      bluemicro_hid.keyboardReport(0, keycode);
-      bluemicro_hid.keyboardRelease();
+      keyboard_api.tap(keycode[0]);
     }
   }
 
-  bluemicro_hid.processQueues(CONNECTION_MODE_AUTO);
-} // end of void loop()
+  keyboard_api.processDirtyKeys();
+}
