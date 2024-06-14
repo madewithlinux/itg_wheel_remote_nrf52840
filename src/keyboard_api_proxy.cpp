@@ -1,3 +1,5 @@
+#include <fmt/core.h>
+
 #include <Adafruit_TinyUSB.h> // for Serial
 #include "bluefruit.h"
 
@@ -11,7 +13,22 @@ KeyboardApiProxy::KeyboardApiProxy() {}
 
 void KeyboardApiProxy::begin()
 {
+    // bluemicro_hid.begin();
+    // bluemicro_hid.setHIDMessageDelay(0);
+    bluemicro_hid.setBLEManufacturer("BLE_Manufacturer");
+    bluemicro_hid.setBLEModel("ITG Wheel Remote");
+    bluemicro_hid.setBLETxPower(4);
+    bluemicro_hid.setHIDMessageDelay(0);
+    bluemicro_hid.setUSBPollInterval(2);
+    bluemicro_hid.setUSBStringDescriptor("USB_Descriptor");
+    // usb_hid.setReportCallback(NULL, hid_report_callback);
+    // blehid.setKeyboardLedCallback(set_keyboard_led);
     bluemicro_hid.begin();
+    // Bluefruit.Periph.setConnInterval
+    Bluefruit.Periph.setConnInterval(6, 12); // 7.5 - 15 ms
+    Bluefruit.Periph.setConnSlaveLatency(10); // TODO: add this when 0.22.0 gets
+    Bluefruit.configPrphBandwidth(BANDWIDTH_MAX);
+
     bluemicro_hid.setHIDMessageDelay(0);
 }
 
@@ -52,8 +69,9 @@ void KeyboardApiProxy::tap(keycode_t keycode)
     release(keycode);
 }
 
-void KeyboardApiProxy::processDirtyKeys()
+void KeyboardApiProxy::processDirtyKeys(bool flush)
 {
+    uint32_t t0 = millis();
     if (held_keycodes.empty())
     {
         bluemicro_hid.keyboardRelease();
@@ -63,11 +81,13 @@ void KeyboardApiProxy::processDirtyKeys()
         bluemicro_hid.processQueues(CONNECTION_MODE_AUTO);
     }
 
-    if (dirty_press.empty() && dirty_release.empty())
+    if (!flush && dirty_press.empty() && dirty_release.empty())
     {
+        // fmt::print("processDirtyKeys() no-op {} ms\n", millis() - t0);
         return;
     }
 
+    static HIDKeyboard last_report = {0};
     HIDKeyboard report = {0};
     size_t idx = 0;
     for (auto keycode : this->held_keycodes)
@@ -105,14 +125,22 @@ void KeyboardApiProxy::processDirtyKeys()
         }
     }
 
+    if (last_report == report) {
+        return;
+    }
+    last_report = report;
+
     bluemicro_hid.keyboardReport(&report);
     // bluemicro_hid.processQueues(CONNECTION_MODE_AUTO);
     while (!bluemicro_hid.isKeyboardQueueEmpty())
     {
-        bluemicro_hid.processQueues(CONNECTION_MODE_AUTO);
+        // bluemicro_hid.processQueues(CONNECTION_MODE_AUTO);
+        bluemicro_hid.processQueues(CONNECTION_MODE_BLE_ONLY);
     }
     dirty_press.clear();
     dirty_release.clear();
+    fmt::print("processDirtyKeys() finished {} ms\n", millis() - t0);
+    fmt::print("blehid.isBootMode() {}\n", blehid.isBootMode());
 }
 
 void KeyboardApiProxy::clear()

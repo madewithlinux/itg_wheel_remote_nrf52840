@@ -157,6 +157,13 @@ void handle_macro_press(macros_t macro, itg_player_t current_player)
         keyboard_api.press(KC_F4);
         break;
     case _qk_boot:
+        Serial.println("will now reboot to UF2 bootloader");
+        enum
+        {
+            DFU_MAGIC_UF2_RESET = 0x57
+        };
+        sd_power_gpregret_set(0, DFU_MAGIC_UF2_RESET);
+        NVIC_SystemReset();
         break;
     case _ir_soundbar_vol_down:
         break;

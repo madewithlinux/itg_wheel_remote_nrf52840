@@ -13,7 +13,7 @@ public:
     void press(keycode_t keycode);
     void release(keycode_t keycode);
     void tap(keycode_t keycode);
-    void processDirtyKeys();
+    void processDirtyKeys(bool flush = false);
     void clear();
 
     // uint32_t tap_code_delay = 1;
@@ -24,7 +24,6 @@ private:
     std::unordered_set<keycode_t> dirty_press;
     std::unordered_set<keycode_t> dirty_release;
     // bool dirty = false;
-
     // HIDKeyboard getKeyboardReport();
 };
 

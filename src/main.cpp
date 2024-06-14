@@ -101,29 +101,31 @@ void loop()
 
   int newValue = rotaryCount;
   int delta = newValue - lastLoopDisplayedRotaryCount;
-  if (newValue != lastLoopDisplayedRotaryCount)
-  {
-    // Also get the delta since the last loop() execution
+  // if (newValue != lastLoopDisplayedRotaryCount)
+  // {
+  //   // Also get the delta since the last loop() execution
 
-    // act on the change: e.g., modify PWM to be faster/slower, etc.
-    lastLoopDisplayedRotaryCount = newValue;
-    Serial.print("Change: ");
-    Serial.print(newValue);
-    Serial.print(" (");
-    Serial.print(delta);
-    Serial.println(")");
+  //   // act on the change: e.g., modify PWM to be faster/slower, etc.
+  //   lastLoopDisplayedRotaryCount = newValue;
+  //   Serial.print("Change: ");
+  //   Serial.print(newValue);
+  //   Serial.print(" (");
+  //   Serial.print(delta);
+  //   Serial.println(")");
 
-    uint8_t keycode[6] = {0};
-    keycode[0] = (delta > 0) ? HID_KEY_ARROW_RIGHT : HID_KEY_ARROW_LEFT;
-    for (int i = 0; i < abs(delta); i++)
-    {
-      keyboard_api.tap(keycode[0]);
-    }
-  }
+  //   uint8_t keycode[6] = {0};
+  //   keycode[0] = (delta > 0) ? HID_KEY_ARROW_RIGHT : HID_KEY_ARROW_LEFT;
+  //   for (int i = 0; i < abs(delta); i++)
+  //   {
+  //     keyboard_api.tap(keycode[0]);
+  //   }
+  // }
+  lastLoopDisplayedRotaryCount = newValue;
 
   // TODO: read player switch
   // TODO: read center button
   process_triggered_keys(activeKeys, false, delta);
 
-  keyboard_api.processDirtyKeys();
+  keyboard_api.processDirtyKeys(true);
+  delay(10);
 }
