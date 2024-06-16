@@ -23,11 +23,13 @@ void KeyboardApiProxy::begin()
     bluemicro_hid.setUSBStringDescriptor("USB_Descriptor");
     // usb_hid.setReportCallback(NULL, hid_report_callback);
     // blehid.setKeyboardLedCallback(set_keyboard_led);
-    bluemicro_hid.begin();
+
     // Bluefruit.Periph.setConnInterval
     Bluefruit.Periph.setConnInterval(6, 12); // 7.5 - 15 ms
     Bluefruit.Periph.setConnSlaveLatency(10); // TODO: add this when 0.22.0 gets
     Bluefruit.configPrphBandwidth(BANDWIDTH_MAX);
+
+    bluemicro_hid.begin();
 
     bluemicro_hid.setHIDMessageDelay(0);
 }

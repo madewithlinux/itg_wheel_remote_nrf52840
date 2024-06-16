@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "*.md": "markdown",
+        "*.effect": "hlsl",
+        "*.bsml": "xml",
+        "*.vrsettings": "json",
+        "*.bplist": "json",
+        "*.dat": "json",
+        "Justfile": "makefile",
+        "*.bu": "yaml",
+        "*.ipxe": "shellscript",
+        "atomic": "cpp"
+    }
+}
