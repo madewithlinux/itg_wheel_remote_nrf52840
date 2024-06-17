@@ -72,6 +72,10 @@ void setup()
   keyboard_api.begin();
 #endif // ITG_REMOTE
 
+#ifdef ITG_RECEIVER
+  receiver_setup();
+#endif // ITG_RECEIVER
+
   TinyUSBDevice.setManufacturerDescriptor("madewithlinux");
 #ifdef ITG_REMOTE
   TinyUSBDevice.setProductDescriptor("itg_wheel_remote");
@@ -82,10 +86,10 @@ void setup()
 
   // delay(500);
   Serial.begin(115200);
-#ifdef ITG_RECEIVER
-  while (!Serial)
-    delay(20);
-#endif // ITG_RECEIVER
+// #ifdef ITG_RECEIVER
+//   while (!Serial)
+//     delay(20);
+// #endif // ITG_RECEIVER
 
 #ifdef ITG_REMOTE
     // // Serial.setTimeout(500);
@@ -123,9 +127,6 @@ void setup()
   activeKeycodes.reserve(10);
 #endif // ITG_REMOTE
 
-#ifdef ITG_RECEIVER
-  receiver_setup();
-#endif // ITG_RECEIVER
 }
 
 int lastLoopDisplayedRotaryCount = 0;

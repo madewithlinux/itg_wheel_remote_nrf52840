@@ -1,3 +1,5 @@
+#ifdef ITG_REMOTE
+
 #include <fmt/core.h>
 
 #include <Adafruit_TinyUSB.h> // for Serial
@@ -173,3 +175,5 @@ void KeyboardApiProxy::clear()
 //     HIDKeyboard report = HIDKeyboard();
 //     return report;
 // }
+
+#endif // ITG_REMOTE

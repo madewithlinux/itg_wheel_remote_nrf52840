@@ -20,6 +20,7 @@
  * that has blehid as peripheral is required for the demo.
  */
 #include <bluefruit.h>
+#include <queue>
 
 #include "itg_receiver.h"
 #include "util.h"
@@ -56,8 +57,29 @@ hid_keyboard_report_t last_kbd_report = {0};
 hid_mouse_report_t last_mse_report = {0};
 hid_gamepad_report_t last_gpd_report = {0};
 
+Adafruit_USBD_HID usb_hid;
+uint8_t const desc_hid_report[] = {
+    TUD_HID_REPORT_DESC_KEYBOARD()};
+std::queue<hid_keyboard_report_t> usb_hid_pending_reports;
+
 void receiver_setup()
 {
+#if defined(ARDUINO_ARCH_MBED) && defined(ARDUINO_ARCH_RP2040)
+    // Manual begin() is required on core without built-in support for TinyUSB such as mbed rp2040
+    TinyUSB_Device_Init(0);
+#endif
+
+    // Setup HID
+    usb_hid.setBootProtocol(HID_ITF_PROTOCOL_KEYBOARD);
+    usb_hid.setPollInterval(2);
+    usb_hid.setReportDescriptor(desc_hid_report, sizeof(desc_hid_report));
+    usb_hid.setStringDescriptor("TinyUSB Keyboard");
+
+    // // Set up output report (on control endpoint) for Capslock indicator
+    // usb_hid.setReportCallback(NULL, hid_report_callback);
+
+    usb_hid.begin();
+
     Serial.begin(115200);
     //  while ( !Serial ) delay(10);   // for nrf52840 with native usb
 
@@ -251,6 +273,21 @@ void receiver_loop()
     // polling interval is 5 ms
     delay(5);
 #endif
+
+    if (TinyUSBDevice.suspended())
+    {
+        // Wake up host if we are in suspend mode
+        // and REMOTE_WAKEUP feature is enabled by host
+        TinyUSBDevice.remoteWakeup();
+    }
+
+    if (!usb_hid_pending_reports.empty() && usb_hid.ready())
+    {
+        hid_keyboard_report_t report = usb_hid_pending_reports.front();
+        usb_hid.keyboardReport(0, report.modifier, report.keycode);
+        usb_hid_pending_reports.pop();
+    }
+    delay(2);
 }
 
 void gamepad_report_callback(hid_gamepad_report_t *report)
@@ -277,59 +314,70 @@ void keyboard_report_callback(hid_keyboard_report_t *report)
     processKeyboardReport(report);
 }
 
+void logKeyboardReport(hid_keyboard_report_t *report)
+{
+    bool shifted = false;
+    if (report->modifier)
+    {
+        if (report->modifier & (KEYBOARD_MODIFIER_LEFTCTRL | KEYBOARD_MODIFIER_RIGHTCTRL))
+        {
+            Serial.print("Ctrl ");
+        }
+
+        if (report->modifier & (KEYBOARD_MODIFIER_LEFTSHIFT | KEYBOARD_MODIFIER_RIGHTSHIFT))
+        {
+            Serial.print("Shift ");
+
+            shifted = true;
+        }
+
+        if (report->modifier & (KEYBOARD_MODIFIER_LEFTALT | KEYBOARD_MODIFIER_RIGHTALT))
+        {
+            Serial.print("Alt ");
+        }
+    }
+
+    for (uint8_t i = 0; i < 6; i++)
+    {
+        uint8_t kc = report->keycode[i];
+        char ch = 0;
+        if (kc == 0)
+        {
+            continue;
+        }
+
+        if (kc < 128)
+        {
+            ch = shifted ? hid_keycode_to_ascii[kc][1] : hid_keycode_to_ascii[kc][0];
+        }
+        else
+        {
+            // non-US keyboard !!??
+        }
+
+        // Printable
+        if (ch)
+        {
+            // Serial.print(ch);
+            fmt::print("keycode {} char {}\n", kc, ch);
+        }
+        else
+        {
+            fmt::print("keycode {}\n", kc);
+        }
+    }
+}
+
 void processKeyboardReport(hid_keyboard_report_t *report)
 {
     // Check with last report to see if there is any changes
     if (memcmp(&last_kbd_report, report, sizeof(hid_keyboard_report_t)))
     {
-        bool shifted = false;
+        // #ifdef DEBUG_LOGS
+        logKeyboardReport(report);
+        // #endif // DEBUG_LOGS
 
-        if (report->modifier)
-        {
-            if (report->modifier & (KEYBOARD_MODIFIER_LEFTCTRL | KEYBOARD_MODIFIER_RIGHTCTRL))
-            {
-                Serial.print("Ctrl ");
-            }
-
-            if (report->modifier & (KEYBOARD_MODIFIER_LEFTSHIFT | KEYBOARD_MODIFIER_RIGHTSHIFT))
-            {
-                Serial.print("Shift ");
-
-                shifted = true;
-            }
-
-            if (report->modifier & (KEYBOARD_MODIFIER_LEFTALT | KEYBOARD_MODIFIER_RIGHTALT))
-            {
-                Serial.print("Alt ");
-            }
-        }
-
-        for (uint8_t i = 0; i < 6; i++)
-        {
-            uint8_t kc = report->keycode[i];
-            char ch = 0;
-            if (kc == 0) {
-                continue;
-            }
-
-            if (kc < 128)
-            {
-                ch = shifted ? hid_keycode_to_ascii[kc][1] : hid_keycode_to_ascii[kc][0];
-            }
-            else
-            {
-                // non-US keyboard !!??
-            }
-
-            // Printable
-            if (ch)
-            {
-                // Serial.print(ch);
-                fmt::print("keycode {} char {}\n", kc, ch);
-            } else {
-                fmt::print("keycode {}\n", kc);
-            }
-        }
+        usb_hid_pending_reports.push(*report);
     }
 
     // update last report
