@@ -24,13 +24,12 @@
 
 #include "itg_receiver.h"
 #include "util.h"
+#include "hardware.h"
 
-// void receiver_setup();
 void scan_callback(ble_gap_evt_adv_report_t *report);
 void connect_callback(uint16_t conn_handle);
 void connection_secured_callback(uint16_t conn_handle);
 void disconnect_callback(uint16_t conn_handle, uint8_t reason);
-// void receiver_loop();
 void gamepad_report_callback(hid_gamepad_report_t *report);
 void processGamepadReport(hid_gamepad_report_t *report);
 void keyboard_report_callback(hid_keyboard_report_t *report);
@@ -62,7 +61,7 @@ uint8_t const desc_hid_report[] = {
     TUD_HID_REPORT_DESC_KEYBOARD()};
 std::queue<hid_keyboard_report_t> usb_hid_pending_reports;
 
-void receiver_setup()
+void receiver_setup1()
 {
 #if defined(ARDUINO_ARCH_MBED) && defined(ARDUINO_ARCH_RP2040)
     // Manual begin() is required on core without built-in support for TinyUSB such as mbed rp2040
@@ -81,10 +80,23 @@ void receiver_setup()
     usb_hid.begin();
 
     Serial.begin(115200);
-    //  while ( !Serial ) delay(10);   // for nrf52840 with native usb
+    // //  while ( !Serial ) delay(10);   // for nrf52840 with native usb
+    while (!TinyUSBDevice.mounted())
+    {
+        digitalWrite(PIN_LED, 0);
+        delay(100);
+        digitalWrite(PIN_LED, 1);
+        delay(400);
+    };
+}
 
+void receiver_setup2()
+{
+
+#ifdef DEBUG_LOGS
     Serial.println("Bluefruit52 Central HID (Keyboard + Mouse + Gamepad) Example");
     Serial.println("--------------------------------------------------\n");
+#endif // DEBUG_LOGS
 
     // Initialize Bluefruit with maximum connections as Peripheral = 0, Central = 1
     // SRAM usage required by SoftDevice will increase dramatically with number of connections
@@ -105,7 +117,6 @@ void receiver_setup()
 
     Bluefruit.configCentralBandwidth(BANDWIDTH_MAX);
     Bluefruit.Central.setConnInterval(6, 12); // 7.5 - 15 ms
-    // Bluefruit.configCentralConn
 
     // Callbacks for Central
     Bluefruit.Central.setConnectCallback(connect_callback);
@@ -149,20 +160,25 @@ void connect_callback(uint16_t conn_handle)
 {
     BLEConnection *conn = Bluefruit.Connection(conn_handle);
 
+#ifdef DEBUG_LOGS
     Serial.println("Connected");
-
     Serial.print("Discovering HID  Service ... ");
+#endif // DEBUG_LOGS
 
     if (hid.discover(conn_handle))
     {
+#ifdef DEBUG_LOGS
         Serial.println("Found it");
+#endif // DEBUG_LOGS
 
         // HID device mostly require pairing/bonding
         conn->requestPairing();
     }
     else
     {
+#ifdef DEBUG_LOGS
         Serial.println("Found NONE");
+#endif // DEBUG_LOGS
 
         // disconnect since we couldn't find blehid service
         conn->disconnect();
@@ -173,12 +189,14 @@ void connection_secured_callback(uint16_t conn_handle)
 {
     BLEConnection *conn = Bluefruit.Connection(conn_handle);
 
+#ifdef DEBUG_LOGS
     Serial.print("connected to ");
     print_ble_addr(conn->getPeerAddr().addr);
     Serial.println();
     char namebuf[128] = {0};
     conn->getPeerName(namebuf, 128);
     fmt::print("name: {}\n", namebuf);
+#endif // DEBUG_LOGS
 
     if (!conn->secured())
     {
@@ -190,24 +208,31 @@ void connection_secured_callback(uint16_t conn_handle)
     }
     else
     {
+#ifdef DEBUG_LOGS
         Serial.println("Secured");
+#endif // DEBUG_LOGS
 
         // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.hid_information.xml
         uint8_t hidInfo[4];
         hid.getHidInfo(hidInfo);
 
+#ifdef DEBUG_LOGS
         Serial.printf("HID version: %d.%d\n", hidInfo[0], hidInfo[1]);
         Serial.print("Country code: ");
         Serial.println(hidInfo[2]);
         Serial.printf("HID Flags  : 0x%02X\n", hidInfo[3]);
+#endif // DEBUG_LOGS
 
         // BLEClientHidAdafruit currently only supports Boot Protocol Mode
         // for Keyboard and Mouse. If we are using a Keyboard + Mouse,
         // let's set the protocol mode on prph to Boot Mode.
 #if DEVICE_TYPE == 0
+        bool bootMode = hid.setBootMode(true);
+#ifdef DEBUG_LOGS
         Serial.print("hid.setBootMode(true) ");
-        Serial.println(
-            hid.setBootMode(true));
+        Serial.println(bootMode);
+#endif // DEBUG_LOGS
+        (void)bootMode;
 #endif
 
         // Enable Keyboard report notification if present on prph
@@ -221,8 +246,10 @@ void connection_secured_callback(uint16_t conn_handle)
         // Enable Gamepad report notification if present on prph
         if (hid.gamepadPresent())
             hid.enableGamepad();
-
+#ifdef DEBUG_LOGS
         Serial.println("Ready to receive from peripheral");
+#endif // DEBUG_LOGS
+        digitalWrite(PIN_LED, 0);
     }
 }
 
@@ -236,8 +263,12 @@ void disconnect_callback(uint16_t conn_handle, uint8_t reason)
     (void)conn_handle;
     (void)reason;
 
+    digitalWrite(PIN_LED, 1);
+
+#ifdef DEBUG_LOGS
     Serial.print("Disconnected, reason = 0x");
     Serial.println(reason, HEX);
+#endif // DEBUG_LOGS
 }
 
 void receiver_loop()
@@ -254,7 +285,9 @@ void receiver_loop()
         hid_keyboard_report_t kbd_report;
 
         // Get latest report
+#ifdef DEBUG_LOGS
         Serial.println("Get report from Keyboard");
+#endif // DEBUG_LOGS
         hid.getKeyboardReport(&kbd_report);
         processKeyboardReport(&kbd_report);
     }
@@ -265,7 +298,9 @@ void receiver_loop()
         hid_gamepad_report_t gpd_report;
 
         // Get latest report
+#ifdef DEBUG_LOGS
         Serial.println("Get report from Gamepad");
+#endif // DEBUG_LOGS
         hid.getGamepadReport(&gpd_report);
         processGamepadReport(&gpd_report);
     }
@@ -292,7 +327,9 @@ void receiver_loop()
 
 void gamepad_report_callback(hid_gamepad_report_t *report)
 {
+#ifdef DEBUG_LOGS
     Serial.println("Recieved report from Gamepad");
+#endif // DEBUG_LOGS
     processGamepadReport(report);
 }
 
@@ -300,13 +337,14 @@ void processGamepadReport(hid_gamepad_report_t *report)
 {
     // TODO: do something with the gamepad report
     memcpy(&last_gpd_report, report, sizeof(hid_gamepad_report_t));
-
+#ifdef DEBUG_LOGS
     Serial.print("Current Gamepad State: Buttons: ");
     Serial.print(report->buttons, BIN);
     Serial.print(" X: ");
     Serial.print(report->x);
     Serial.print(" Y: ");
     Serial.println(report->y);
+#endif // DEBUG_LOGS
 }
 
 void keyboard_report_callback(hid_keyboard_report_t *report)
@@ -314,6 +352,7 @@ void keyboard_report_callback(hid_keyboard_report_t *report)
     processKeyboardReport(report);
 }
 
+#ifdef DEBUG_LOGS
 void logKeyboardReport(hid_keyboard_report_t *report)
 {
     bool shifted = false;
@@ -367,15 +406,16 @@ void logKeyboardReport(hid_keyboard_report_t *report)
         }
     }
 }
+#endif // DEBUG_LOGS
 
 void processKeyboardReport(hid_keyboard_report_t *report)
 {
     // Check with last report to see if there is any changes
     if (memcmp(&last_kbd_report, report, sizeof(hid_keyboard_report_t)))
     {
-        // #ifdef DEBUG_LOGS
+#ifdef DEBUG_LOGS
         logKeyboardReport(report);
-        // #endif // DEBUG_LOGS
+#endif // DEBUG_LOGS
 
         usb_hid_pending_reports.push(*report);
     }

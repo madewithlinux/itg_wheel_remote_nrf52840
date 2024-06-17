@@ -23,6 +23,8 @@
 #include <bluemicro_hid.h>
 #include "keyboard_api_proxy.h"
 #include "keymap_layers.h"
+#include "hardware.h"
+
 #ifdef ITG_RECEIVER
 #include "itg_receiver.h"
 #endif // ITG_RECEIVER
@@ -70,13 +72,11 @@ void IsrForQDEC(void)
 
 void setup()
 {
+  pinMode(PIN_LED, OUTPUT);
+  digitalWrite(PIN_LED, 1);
 #ifdef ITG_REMOTE
   keyboard_api.begin();
 #endif // ITG_REMOTE
-
-#ifdef ITG_RECEIVER
-  receiver_setup();
-#endif // ITG_RECEIVER
 
   TinyUSBDevice.setManufacturerDescriptor("madewithlinux");
 #ifdef ITG_REMOTE
@@ -84,6 +84,10 @@ void setup()
 #endif // ITG_REMOTE
 #ifdef ITG_RECEIVER
   TinyUSBDevice.setProductDescriptor("itg_wheel_receiver");
+#endif // ITG_RECEIVER
+
+#ifdef ITG_RECEIVER
+  receiver_setup1();
 #endif // ITG_RECEIVER
 
   Serial.begin(115200);
@@ -116,6 +120,10 @@ void setup()
   pinMode(PLAYER_SWITCH_PIN, INPUT_PULLUP);
   pinMode(ENCODER_BUTTON_PIN, INPUT_PULLUP);
 #endif // ITG_REMOTE
+
+#ifdef ITG_RECEIVER
+  receiver_setup2();
+#endif // ITG_RECEIVER
 }
 
 int lastLoopDisplayedRotaryCount = 0;
