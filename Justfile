@@ -7,10 +7,10 @@ console-loop SERIAL_TTY:
 	done
 
 remote-console-loop:
-	just console-loop /dev/serial/by-id/usb-madewithlinux_itg_wheel_remote_55EB8BBE7D8081C3-if00
+	just console-loop /dev/serial/by-id/usb-madewithlinux_itg_wheel_remote_*
 
 receiver-console-loop:
-	just console-loop /dev/serial/by-id/usb-madewithlinux_itg_wheel_receiver_B466DFE0A5A348FA-if00
+	just console-loop /dev/serial/by-id/usb-madewithlinux_itg_wheel_receiver_*
 
 
 serials:
