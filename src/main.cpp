@@ -27,6 +27,8 @@
 #include "itg_receiver.h"
 #endif // ITG_RECEIVER
 
+#define PLAYER_SWITCH_PIN P0_11
+#define ENCODER_BUTTON_PIN P1_00
 #define ENCODER_S1_PIN P1_06
 #define ENCODER_S2_PIN P1_04
 #include "qdec.h"
@@ -84,31 +86,16 @@ void setup()
   TinyUSBDevice.setProductDescriptor("itg_wheel_receiver");
 #endif // ITG_RECEIVER
 
-  // delay(500);
   Serial.begin(115200);
-// #ifdef ITG_RECEIVER
-//   while (!Serial)
-//     delay(20);
-// #endif // ITG_RECEIVER
-
-#ifdef ITG_REMOTE
-    // // Serial.setTimeout(500);
-    // uint32_t begin_ms = millis();
-    // while (!Serial)
-    // {
-    //   delay(20);
-    //   // yield();
-    //   if ((millis() - begin_ms) > (13790))
-    //   {
-    //     break;
-    //   }
-    // } // wait for serial port to connect... needed for boards with native USB serial support
-    // fmt::print("delay until serial was ready: {}\n", millis() - begin_ms);
-#endif // ITG_REMOTE
-
 #ifdef DEBUG_LOGS
-  Serial.print("Beginning ITG wheel remote sketch ");
-  Serial.println(__FILE__); // becomes the sketch's filename during compilation
+  while (!Serial)
+    delay(20);
+#ifdef ITG_REMOTE
+  Serial.println("Beginning ITG wheel remote sketch");
+#endif // ITG_REMOTE
+#ifdef ITG_RECEIVER
+  Serial.println("Beginning ITG wheel receiver sketch");
+#endif // ITG_RECEIVER
 #endif
 
 #ifdef ITG_REMOTE
@@ -125,8 +112,10 @@ void setup()
 
   activeKeys.reserve(10);
   activeKeycodes.reserve(10);
-#endif // ITG_REMOTE
 
+  pinMode(PLAYER_SWITCH_PIN, INPUT_PULLUP);
+  pinMode(ENCODER_BUTTON_PIN, INPUT_PULLUP);
+#endif // ITG_REMOTE
 }
 
 int lastLoopDisplayedRotaryCount = 0;
@@ -136,6 +125,12 @@ void loop()
 #ifdef ITG_REMOTE
   static trigger_keys_t lastAactiveKeys;
   activeKeys = scanMatrix(activeKeys, rows, columns);
+  // read encoder center button separately
+  if (digitalRead(ENCODER_BUTTON_PIN) == 0)
+  {
+    activeKeys.push_back(INDEX_ENCODER_MIDDLE);
+  }
+
   if (activeKeys != lastAactiveKeys)
   {
 #ifdef DEBUG_LOGS
@@ -148,9 +143,8 @@ void loop()
   int delta = newValue - lastLoopDisplayedRotaryCount;
   lastLoopDisplayedRotaryCount = newValue;
 
-  // TODO: read player switch
-  // TODO: read center button
-  process_triggered_keys(activeKeys, false, delta);
+  bool player_switch = digitalRead(PLAYER_SWITCH_PIN);
+  process_triggered_keys(activeKeys, player_switch, delta);
 
   keyboard_api.processDirtyKeys(true);
   delay(10);

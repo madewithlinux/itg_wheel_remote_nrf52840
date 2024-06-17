@@ -183,7 +183,7 @@ void process_triggered_keys(
     const bool player_switch_value,
     const int encoder_delta)
 {
-    itg_player_t current_player = player_switch_value ? PLAYER_2 : PLAYER_1;
+    itg_player_t current_player = player_switch_value ? PLAYER_1 : PLAYER_2;
 
     keyboard_api.clear();
     layer_names_t active_layer = find_active_layer(activeKeys);
