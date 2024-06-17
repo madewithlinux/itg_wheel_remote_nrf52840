@@ -72,8 +72,9 @@ void IsrForQDEC(void)
 
 void setup()
 {
-  pinMode(PIN_LED, OUTPUT);
-  digitalWrite(PIN_LED, 1);
+  // digitalWrite(PIN_LED, 1);
+  ledOn(PIN_LED);
+
 #ifdef ITG_REMOTE
   keyboard_api.begin();
 #endif // ITG_REMOTE

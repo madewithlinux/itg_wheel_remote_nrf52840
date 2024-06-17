@@ -71,18 +71,12 @@ extern "C"
 #define P1_15 (25)
 
 // LEDs
-#define PIN_LED1             (3)
-// TODO: remove extra LEDs and neopixels and stuff
-#define PIN_LED2             (4)
-#define PIN_NEOPIXEL_POWER   (34)
-#define PIN_NEOPIXEL         (8)
-#define NEOPIXEL_NUM         1
-
-#define LED_BUILTIN          PIN_LED1
-#define LED_CONN             PIN_LED2
-
-#define LED_RED              PIN_LED1
-#define LED_BLUE             PIN_LED2
+#define PIN_LED              (P0_15)
+#define LED_BUILTIN          PIN_LED
+// it's not actually blue
+#define LED_BLUE             PIN_LED
+// just to satisfy bluemicro HID
+#define LED_RED              LED_BLUE
 
 #define LED_STATE_ON         1         // State when LED is litted
 
@@ -94,28 +88,21 @@ extern "C"
 /*
  * Analog pins
  */
-#define PIN_A0               (14)
-#define PIN_A1               (15)
-#define PIN_A2               (16)
-#define PIN_A3               (17)
-#define PIN_A4               (18)
-#define PIN_A5               (19)
-#define PIN_A6               (20)
-#define PIN_A7               (21)
+#define PIN_A0               (P0_02)
+#define PIN_A2               (P0_04)
+#define PIN_A5               (P0_29)
+#define PIN_A7               (P0_31)
 
 static const uint8_t A0  = PIN_A0 ;
-static const uint8_t A1  = PIN_A1 ;
 static const uint8_t A2  = PIN_A2 ;
-static const uint8_t A3  = PIN_A3 ;
-static const uint8_t A4  = PIN_A4 ;
 static const uint8_t A5  = PIN_A5 ;
-static const uint8_t A6  = PIN_A6 ;
 static const uint8_t A7  = PIN_A7 ;
+
 #define ADC_RESOLUTION    14
 
 // Other pins
 #define PIN_AREF           PIN_A7
-#define PIN_VBAT           PIN_A6
+#define PIN_VBAT           P0_04
 #define PIN_NFC1           (33)
 #define PIN_NFC2           (2)
 
@@ -124,19 +111,19 @@ static const uint8_t AREF = PIN_AREF;
 /*
  * Serial interfaces
  */
-#define PIN_SERIAL1_RX       (1)
-#define PIN_SERIAL1_TX       (0)
+#define PIN_SERIAL1_RX       (P0_08)
+#define PIN_SERIAL1_TX       (P0_06)
 
 /*
  * SPI Interfaces
  */
 #define SPI_INTERFACES_COUNT 1
 
-#define PIN_SPI_MISO         (24)
-#define PIN_SPI_MOSI         (25)
-#define PIN_SPI_SCK          (26)
+#define PIN_SPI_MISO         (P1_11)
+#define PIN_SPI_MOSI         (P0_10 )
+#define PIN_SPI_SCK          (P1_13)
 
-static const uint8_t SS   = (5);
+// static const uint8_t SS   = (5);
 static const uint8_t MOSI = PIN_SPI_MOSI ;
 static const uint8_t MISO = PIN_SPI_MISO ;
 static const uint8_t SCK  = PIN_SPI_SCK ;
@@ -146,8 +133,8 @@ static const uint8_t SCK  = PIN_SPI_SCK ;
  */
 #define WIRE_INTERFACES_COUNT 1
 
-#define PIN_WIRE_SDA         (22)
-#define PIN_WIRE_SCL         (23)
+#define PIN_WIRE_SDA         (P0_17)
+#define PIN_WIRE_SCL         (P0_20)
 
 // QSPI Pins
 #define PIN_QSPI_SCK         27

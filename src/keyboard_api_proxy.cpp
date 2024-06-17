@@ -13,6 +13,15 @@ KeyboardApiProxy keyboard_api;
 
 KeyboardApiProxy::KeyboardApiProxy() {}
 
+void connect_callback(uint16_t conn_handle)
+{
+    ledOff(PIN_LED);
+}
+void disconnect_callback(uint16_t conn_handle, uint8_t reason)
+{
+    ledOn(PIN_LED);
+}
+
 void KeyboardApiProxy::begin()
 {
     // bluemicro_hid.begin();
@@ -27,9 +36,11 @@ void KeyboardApiProxy::begin()
     // blehid.setKeyboardLedCallback(set_keyboard_led);
 
     // Bluefruit.Periph.setConnInterval
-    Bluefruit.Periph.setConnInterval(6, 12); // 7.5 - 15 ms
+    Bluefruit.Periph.setConnInterval(6, 12);  // 7.5 - 15 ms
     Bluefruit.Periph.setConnSlaveLatency(10); // TODO: add this when 0.22.0 gets
     Bluefruit.configPrphBandwidth(BANDWIDTH_MAX);
+    Bluefruit.Periph.setConnectCallback(connect_callback);
+    Bluefruit.Periph.setDisconnectCallback(disconnect_callback);
 
     bluemicro_hid.begin();
 
@@ -131,7 +142,8 @@ void KeyboardApiProxy::processDirtyKeys(bool flush)
         }
     }
 
-    if (last_report == report) {
+    if (last_report == report)
+    {
         return;
     }
     last_report = report;
