@@ -82,23 +82,30 @@ void setup()
 
   // delay(500);
   Serial.begin(115200);
+#ifdef ITG_RECEIVER
   while (!Serial)
     delay(20);
+#endif // ITG_RECEIVER
 
-  // Serial.setTimeout(500);
-  // uint32_t begin = millis();
-  // while (!Serial)
-  // {
-  //   delay(20);
-  //   // yield();
-  //   if (millis() - begin > 10 * 1000)
-  //   {
-  //     break;
-  //   }
-  // } // wait for serial port to connect... needed for boards with native USB serial support
+#ifdef ITG_REMOTE
+    // // Serial.setTimeout(500);
+    // uint32_t begin_ms = millis();
+    // while (!Serial)
+    // {
+    //   delay(20);
+    //   // yield();
+    //   if ((millis() - begin_ms) > (13790))
+    //   {
+    //     break;
+    //   }
+    // } // wait for serial port to connect... needed for boards with native USB serial support
+    // fmt::print("delay until serial was ready: {}\n", millis() - begin_ms);
+#endif // ITG_REMOTE
 
-  Serial.print("Beginning QDecoder Sketch ");
+#ifdef DEBUG_LOGS
+  Serial.print("Beginning ITG wheel remote sketch ");
   Serial.println(__FILE__); // becomes the sketch's filename during compilation
+#endif
 
 #ifdef ITG_REMOTE
 #endif // ITG_REMOTE
@@ -130,7 +137,9 @@ void loop()
   activeKeys = scanMatrix(activeKeys, rows, columns);
   if (activeKeys != lastAactiveKeys)
   {
+#ifdef DEBUG_LOGS
     fmt::print("activeKeys: {}\n", activeKeys);
+#endif
     lastAactiveKeys = activeKeys;
   }
 

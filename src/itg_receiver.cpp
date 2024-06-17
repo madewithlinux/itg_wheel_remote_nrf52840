@@ -261,6 +261,7 @@ void gamepad_report_callback(hid_gamepad_report_t *report)
 
 void processGamepadReport(hid_gamepad_report_t *report)
 {
+    // TODO: do something with the gamepad report
     memcpy(&last_gpd_report, report, sizeof(hid_gamepad_report_t));
 
     Serial.print("Current Gamepad State: Buttons: ");
@@ -307,6 +308,9 @@ void processKeyboardReport(hid_keyboard_report_t *report)
         {
             uint8_t kc = report->keycode[i];
             char ch = 0;
+            if (kc == 0) {
+                continue;
+            }
 
             if (kc < 128)
             {

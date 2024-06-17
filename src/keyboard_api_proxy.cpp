@@ -71,6 +71,8 @@ void KeyboardApiProxy::tap(keycode_t keycode)
     release(keycode);
 }
 
+#define CONNECTION_MODE CONNECTION_MODE_BLE_ONLY
+
 void KeyboardApiProxy::processDirtyKeys(bool flush)
 {
     uint32_t t0 = millis();
@@ -80,7 +82,7 @@ void KeyboardApiProxy::processDirtyKeys(bool flush)
     }
     while (!bluemicro_hid.isKeyboardQueueEmpty())
     {
-        bluemicro_hid.processQueues(CONNECTION_MODE_AUTO);
+        bluemicro_hid.processQueues(CONNECTION_MODE);
     }
 
     if (!flush && dirty_press.empty() && dirty_release.empty())
@@ -133,16 +135,17 @@ void KeyboardApiProxy::processDirtyKeys(bool flush)
     last_report = report;
 
     bluemicro_hid.keyboardReport(&report);
-    // bluemicro_hid.processQueues(CONNECTION_MODE_AUTO);
+    // bluemicro_hid.processQueues(CONNECTION_MODE);
     while (!bluemicro_hid.isKeyboardQueueEmpty())
     {
-        // bluemicro_hid.processQueues(CONNECTION_MODE_AUTO);
-        bluemicro_hid.processQueues(CONNECTION_MODE_BLE_ONLY);
+        bluemicro_hid.processQueues(CONNECTION_MODE);
     }
     dirty_press.clear();
     dirty_release.clear();
+#ifdef DEBUG_LOGS
     fmt::print("processDirtyKeys() finished {} ms\n", millis() - t0);
     fmt::print("blehid.isBootMode() {}\n", blehid.isBootMode());
+#endif
 }
 
 void KeyboardApiProxy::clear()
@@ -157,7 +160,7 @@ void KeyboardApiProxy::clear()
     //     bluemicro_hid.keyboardRelease();
     //     while (!bluemicro_hid.isKeyboardQueueEmpty())
     //     {
-    //         bluemicro_hid.processQueues(CONNECTION_MODE_AUTO);
+    //         bluemicro_hid.processQueues(CONNECTION_MODE);
     //     }
     // }
     held_keycodes.clear();
